@@ -48,16 +48,38 @@
 </template>
 
 <script>
+// export default {
+//   data() {
+//     return {
+//       data: {}, // Для хранения JSON данных
+//     };
+//   },
+//   methods: {
+//     async fetchData() {
+//       try {
+//         const response = await fetch("/data.json"); // Загружаем JSON
+//         this.data = await response.json(); // Сохраняем в state
+//       } catch (error) {
+//         console.error("Error fetching data:", error);
+//       }
+//     },
+//   },
+//   created() {
+//     this.fetchData(); // Загружаем данные при инициализации
+//   },
+// };
+
+
 export default {
   data() {
     return {
-      data: {}, // Для хранения JSON данных
+      data: {}, // Для хранения данных из API
     };
   },
   methods: {
     async fetchData() {
       try {
-        const response = await fetch("/data.json"); // Загружаем JSON
+        const response = await fetch("http://127.0.0.1:5000/api/data"); // Запрашиваем данные
         this.data = await response.json(); // Сохраняем в state
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -68,50 +90,52 @@ export default {
     this.fetchData(); // Загружаем данные при инициализации
   },
 };
+
+
 </script>
 
 <style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  margin: 20px;
-}
+  #app{
+    font-family: Avenir, Helvetica, Arial, sans-serif;
+    margin: 20px;
+  }
 
-header {
-  text-align: center;
-  margin-bottom: 20px;
-}
+  header{
+    text-align: center;
+    margin-bottom: 20px;
+  }
 
-section {
-  margin-bottom: 20px;
-}
+  section{
+    margin-bottom: 20px;
+  }
 
-h2 {
-  color: #2c3e50;
-  margin-bottom: 10px;
-}
+  h2 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+  }
 
-ul {
-  list-style: none;
-  padding: 0;
-}
+  ul {
+    list-style: none;
+    padding: 0;
+  }
 
-li {
-  margin: 5px 0;
-}
+  li {
+    margin: 5px 0;
+  }
 
-.message {
-  border: 1px solid #ddd;
-  padding: 10px;
-  border-radius: 5px;
-  margin-bottom: 10px;
-}
+  .message {
+    border: 1px solid #ddd;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+  }
 
-.analytics ul {
-  display: flex;
-  flex-wrap: wrap;
-}
+  .analytics ul {
+    display: flex;
+    flex-wrap: wrap;
+  }
 
-.analytics li {
-  margin-right: 10px;
-}
+  .analytics li {
+    margin-right: 10px;
+  }
 </style>
