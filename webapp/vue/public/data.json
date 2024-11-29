@@ -1,0 +1,51 @@
+{
+    "user_info": {
+        "id": 848456806,
+        "first_name": "\u041c\u0438\u0440\u043e\u0441\u043b\u0430\u0432",
+        "username": "fomixb_v",
+        "type": "private",
+        "active_usernames": [
+            "fomixb_v"
+        ],
+        "has_private_forwards": true,
+        "emoji_status_custom_emoji_id": "5296510427696475361",
+        "max_reaction_count": 11,
+        "accent_color_id": 0,
+        "background_custom_emoji_id": "5303197949474388339"
+    },
+    "messages": [
+        {
+            "update_id": 434885102,
+            "message": {
+                "message_id": 1301,
+                "from": {
+                    "id": 1370266711,
+                    "is_bot": false,
+                    "first_name": "\u0414\u043c\u0438\u0442\u0440\u0438\u0439",
+                    "last_name": "\u041b\u0443\u0448\u043d\u0438\u043a\u043e\u0432",
+                    "username": "Jcidjdhdhd",
+                    "language_code": "ru"
+                },
+                "chat": {
+                    "id": 1370266711,
+                    "first_name": "\u0414\u043c\u0438\u0442\u0440\u0438\u0439",
+                    "last_name": "\u041b\u0443\u0448\u043d\u0438\u043a\u043e\u0432",
+                    "username": "Jcidjdhdhd",
+                    "type": "private"
+                },
+                "date": 1732919624,
+                "text": "/start",
+                "entities": [
+                    {
+                        "offset": 0,
+                        "length": 6,
+                        "type": "bot_command"
+                    }
+                ]
+            }
+        }
+    ],
+    "analytics": {
+        "/start": 1
+    }
+}
