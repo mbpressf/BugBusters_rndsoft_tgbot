@@ -6,5 +6,13 @@
     "-1002372414833": {
         "chat_name": "ᅠ и Максим",
         "chat_type": "supergroup"
+    },
+    "-4732771175": {
+        "chat_name": "Чат2",
+        "chat_type": "group"
+    },
+    "-4566804959": {
+        "chat_name": "Чат1",
+        "chat_type": "group"
     }
 }

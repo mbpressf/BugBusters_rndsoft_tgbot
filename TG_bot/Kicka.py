@@ -49,13 +49,14 @@ def save_user_ids(user_ids):
     with open('user_ids.json', 'w', encoding='utf-8') as file:
         json.dump(user_ids_dict_serializable, file, ensure_ascii=False, indent=4)
 
-# Загружаем ID пользователей из файла
 def load_user_ids():
     try:
         with open('user_ids.json', 'r', encoding='utf-8') as file:
-            return json.load(file)
+            data = json.load(file)
+            # Преобразуем списки обратно в множества
+            return {int(chat_id): set(user_ids) for chat_id, user_ids in data.items()}
     except (FileNotFoundError, json.JSONDecodeError):
-        return {}  # Возвращаем пустой словарь, если файл не существует или пуст
+        return {}
 
 
 # Словарь для хранения ID пользователей по чатам
@@ -123,7 +124,7 @@ async def collect_user_ids(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Загружаем чаты
     chats = load_chats()
-    all_user_ids = []
+    all_user_ids = {}  # Инициализируем словарь для хранения ID пользователей по чатам
 
     bot = Bot(token=bot_token)
 
@@ -132,8 +133,11 @@ async def collect_user_ids(update: Update, context: ContextTypes.DEFAULT_TYPE):
         try:
             # Получаем администраторов чата
             administrators = await bot.get_chat_administrators(chat_id)
+            if chat_id not in all_user_ids:
+                all_user_ids[chat_id] = set()  # Инициализируем множество для чата
+
             for admin in administrators:
-                all_user_ids.append(admin.user.id)  # Добавляем ID администратора
+                all_user_ids[chat_id].add(admin.user.id)  # Добавляем ID администратора
         except Exception as e:
             await update.message.reply_text(f"Не удалось получить администраторов чата {chat_id}: {e}")
             continue
@@ -141,6 +145,7 @@ async def collect_user_ids(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Сохраняем все собранные ID пользователей в файл
     save_user_ids(all_user_ids)
     await update.message.reply_text(f"ID пользователей успешно собраны и сохранены.")
+
 
 
 
@@ -180,17 +185,17 @@ async def track_user_message(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     # Загружаем текущий список пользователей
     if chat_id not in user_ids_dict:
-        user_ids_dict[chat_id] = []
+        user_ids_dict[chat_id] = set()  # Используем set для уникальности пользователей
 
-    # Проверяем, есть ли уже этот пользователь в списке для чата
-    if user_id not in user_ids_dict[chat_id]:
-        user_ids_dict[chat_id].append(user_id)  # Добавляем пользователя, если его нет
+    # Добавляем ID пользователя в set, если его нет в списке
+    user_ids_dict[chat_id].add(user_id)
 
     # Логируем обновленный список пользователей
     logger.info(f"Обновленный список пользователей для чата {chat_id}: {user_ids_dict[chat_id]}")
 
     # Сохраняем обновленный список ID пользователей в файл
     save_user_ids(user_ids_dict)
+
 
 
 
