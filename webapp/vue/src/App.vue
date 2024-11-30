@@ -53,6 +53,9 @@ export default {
 </script>
 
 <style scoped>
+.vue-devtools {
+  display: none !important;
+}
 /* Информация о пользователе */
 .user-info {
   margin-bottom: 20px;
