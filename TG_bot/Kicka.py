@@ -3,6 +3,9 @@ from telegram import Update, Bot
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 import logging
 from telegram.ext import ChatMemberHandler
+import time
+from httpx import ConnectError
+import re
 
 
 # Включаем логирование
@@ -15,6 +18,24 @@ logger = logging.getLogger(__name__)
 # Инициализация бота с токеном
 bot_token = '7029933175:AAEI_Vx4kvq0IVEVruCyxt0uAzYkxaLtnj0'  # Замените на токен вашего бота
 admin_ids = {7004441787, 5405355475}  # Используем множество для уникальности
+
+
+
+
+
+
+
+
+
+
+# Функция, реагирующая на команды /start и /старт
+async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Получаем имя пользователя, если доступно
+    user_name = update.message.from_user.first_name
+    # Отправляем приветственное сообщение
+    await update.message.reply_text(f"Привет, {user_name}! Это бот, который поможет тебе управлять чатами.")
+
+
 
 
 
@@ -86,100 +107,11 @@ async def track_new_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 
-
-
-
-
-import re
-
 def escape_markdown_v2(text: str) -> str:
     """Экранирует специальные символы MarkdownV2."""
     text = re.sub(r'([\\`*_{}[\]()#+\-.!_])', r'\\\1', text)  # Экранируем обычные специальные символы
     text = text.replace('(', r'\(').replace(')', r'\)')  # Экранируем круглые скобки
     return text
-
-import time
-from httpx import ConnectError
-
-# async def kick_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
-#     # Проверка, что команда пришла от администратора
-#     if update.message.from_user.id not in admin_ids:
-#         await update.message.reply_text("У вас нет прав на выполнение этой команды.")
-#         return
-
-#     # Получаем ID пользователя и ID чатов из аргументов команды
-#     try:
-#         user_id = int(context.args[0])  # ID пользователя, которого нужно удалить
-#     except (IndexError, ValueError):
-#         await update.message.reply_text("Пожалуйста, укажите ID пользователя для удаления.")
-#         return
-
-#     # Загружаем чаты
-#     chats = load_chats()
-
-#     # Перебираем все чаты, чтобы проверить, является ли отправитель администратором
-#     for chat_id, chat_info in chats.items():
-#         attempts = 3  # Количество попыток
-#         for attempt in range(attempts):
-#             try:
-#                 bot = Bot(token=bot_token)
-#                 administrators = await bot.get_chat_administrators(chat_id)
-
-#                 # Проверяем, является ли отправитель команды администратором в этом чате
-#                 if update.message.from_user.id not in [admin.user.id for admin in administrators]:
-#                     # await update.message.reply_text(f"Вы не являетесь администратором в чате {chat_id}.")
-#                     break  # Прерываем выполнение, если ошибка связана с правами администратора
-
-#                 # Получаем информацию о пользователе
-#                 user = await bot.get_chat_member(chat_id, user_id)
-#                 user_name = user.user.username if user.user.username else f"{user.user.first_name} {user.user.last_name}"
-#                 user_status = user.status  # Статус пользователя в чате
-
-#                 # Если пользователь не забанен, пытаемся получить дату присоединения
-#                 user_joined = 'Неизвестно'
-#                 if user_status != 'banned' and hasattr(user, 'joined_date') and user.joined_date:
-#                     user_joined = user.joined_date.strftime('%Y-%m-%d %H:%M:%S')
-
-#                 # Получаем имя чата и другую информацию
-#                 chat_name = chat_info.get('chat_name', 'Неизвестный чат')
-#                 chat_title = await bot.get_chat(chat_id)  # Для получения дополнительных данных о чате
-#                 chat_type = chat_title.type  # Тип чата: канал, группа, супергруппа и т.д.
-#                 chat_description = chat_title.description if chat_title.description else 'Нет описания'
-
-#                 # Экранируем специальные символы в именах пользователя и чата
-#                 user_name = escape_markdown_v2(user_name)
-#                 chat_name = escape_markdown_v2(chat_name)
-
-#                 # Если отправитель является администратором, удаляем пользователя
-#                 await bot.ban_chat_member(chat_id, user_id)  # Используем ban_chat_member
-
-#                 # Формируем сообщение с использованием MarkdownV2 и скрытия текста
-#                 message = (
-#                     f"Пользователь: @{user_name} \(ID: ||\{user_id}||\)\n"
-#                     f"Статус в чате: {user_status}\n"
-#                     f"Дата присоединения: {user_joined}\n\n"
-#                     f"Чат: {chat_name} \(ID: ||\{chat_id}||\)\n"
-#                     f"Тип чата: {chat_type}\n"
-#                     f"Описание чата: {chat_description}\n\n"
-#                     f"Пользователь был удален из чата"
-#                 )
-
-#                 # Отправляем сообщение в формате MarkdownV2
-#                 await update.message.reply_text(message, parse_mode='MarkdownV2')
-
-#                 break  # Прерываем цикл повторных попыток, если операция выполнена успешно
-
-#             except ConnectError as e:
-#                 if attempt < attempts - 1:
-#                     await update.message.reply_text(f"Ошибка подключения, повторная попытка через 3 секунды... ({attempt + 1}/{attempts})")
-#                     time.sleep(3)  # Задержка между попытками
-#                 else:
-#                     await update.message.reply_text(f"Не удалось удалить пользователя из чата {chat_id}: {e}")
-#             except Exception as e:
-#                 await update.message.reply_text(f"Не удалось удалить пользователя из чата {chat_id}: {e}")
-
-
-
 
 
 
@@ -349,14 +281,6 @@ async def kick_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 
-
-
-
-
-
-
-
-
 # Функция для сбора всех ID пользователей из всех чатов
 async def collect_user_ids(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Проверка, что команда пришла от администратора
@@ -442,10 +366,52 @@ async def track_user_message(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
 
 
+
+# Обработчик для команды /старт
+async def start_message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Проверка, начинается ли сообщение с "/старт"
+    if update.message.text.lower().startswith("/старт"):
+        await start_command(update, context)
+
+
+
+async def id_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.message.from_user.id
+    await update.message.reply_text(
+        f"Ваш ID: {user_id}\n\n"
+        f"Для того, чтобы видеть цифровые ID в профилях, необходимо сделать следующее: \n"
+        f"1. Установить актуальную версию приложения Telegram Desktop (https://desktop.telegram.org/)\n"
+        f"2. Войти в свой аккаунт.\n"
+        f"3. Перейти в раздел Настройки › Продвинутые настройки › Экспериментальные настройки и включить опцию Show Peer IDs in Profile."
+    )
+    logger.info(f"Сообщение не переслано. ID отправителя: {user_id}")
+
+
+
+
+def retry(func, retries=3, delay=5):
+    for _ in range(retries):
+        try:
+            return func()
+        except Exception as e:
+            print(f"Error: {e}, retrying...")
+            time.sleep(delay)
+    raise Exception("Max retries reached")
+
+
 # Основная функция для запуска бота
 def main():
     application = Application.builder().token(bot_token).build()
 
+    # Обработчик для команды /id
+    application.add_handler(CommandHandler("id", id_command))
+
+     # Обработчик для команды /start и /старт с помощью MessageHandler
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, start_message_handler))
+
+    # Обработчик для команды /start (латиница)
+    application.add_handler(CommandHandler("start", start_command))
+    
     # Обработчик команды /kick для удаления пользователя
     application.add_handler(CommandHandler("kick", kick_user))
 
@@ -462,7 +428,11 @@ def main():
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, track_user_message))
 
     # Запуск бота
-    application.run_polling()
+    try:
+        application.run_polling()
+    except Exception as e:
+        print(f"Polling failed: {e}")
+        retry(application.run_polling)
 
 
 import httpx
