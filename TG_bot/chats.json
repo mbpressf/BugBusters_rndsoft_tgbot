@@ -1,8 +1,4 @@
 {
-    "-1002415430874": {
-        "chat_name": "Р±Р°РјР±Р°Рј",
-        "chat_type": "supergroup"
-    },
     "-1002372414833": {
         "chat_name": "ᅠ и Максим",
         "chat_type": "supergroup"
@@ -14,5 +10,9 @@
     "-4566804959": {
         "chat_name": "Чат1",
         "chat_type": "group"
+    },
+    "-1002415430874": {
+        "chat_name": "бамбам",
+        "chat_type": "supergroup"
     }
 }
