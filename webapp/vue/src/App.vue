@@ -1,141 +1,115 @@
 <template>
-  <div id="app">
-    <header>
-      <h1>User and Message Analytics</h1>
-    </header>
+  <div>
+    <!-- Информация о пользователе -->
+    <div class="user-info" v-if="data">
+      <p><strong>ID:</strong> {{ data.user_info.id }}</p>
+      <p><strong>Имя:</strong> {{ data.user_info.first_name }}</p>
+      <p><strong>Пользователь:</strong> {{ data.user_info.username }}</p>
+    </div>
 
-    <!-- User Info Section -->
-    <section v-if="data.user_info" class="user-info">
-      <h2>User Information</h2>
-      <ul>
-        <li><strong>ID:</strong> {{ data.user_info.id }}</li>
-        <li><strong>First Name:</strong> {{ data.user_info.first_name }}</li>
-        <li><strong>Username:</strong> {{ data.user_info.username }}</li>
-        <li>
-          <strong>Active Usernames:</strong>
-          <ul>
-            <li v-for="username in data.user_info.active_usernames" :key="username">
-              {{ username }}
-            </li>
-          </ul>
-        </li>
-        <li><strong>Has Private Forwards:</strong> {{ data.user_info.has_private_forwards }}</li>
-      </ul>
-    </section>
-
-    <!-- Messages Section -->
-    <section v-if="data.messages" class="messages">
-      <h2>Messages</h2>
-      <div v-for="(message, index) in data.messages" :key="index" class="message">
-        <h3>Message {{ index + 1 }}</h3>
-        <p><strong>Message ID:</strong> {{ message.message.message_id }}</p>
-        <p><strong>From:</strong> {{ message.message.from.first_name }} {{ message.message.from.last_name }}</p>
-        <p><strong>Text:</strong> {{ message.message.text }}</p>
-        <p><strong>Date:</strong> {{ new Date(message.message.date * 1000).toLocaleString() }}</p>
+    <!-- Сообщения -->
+    <div class="messages" v-if="data">
+      <div 
+        class="message" 
+        v-for="(message, index) in data.messages" 
+        :key="index"
+      >
+        <div class="message-meta">
+          <span class="message-time">{{ message.date }} {{ message.time }}</span>
+        </div>
+        <div 
+          class="message-text" 
+          :class="{ 'no-text': !message.text }"
+        >
+          {{ message.text || 'Сообщение без текста' }}
+        </div>
       </div>
-    </section>
-
-    <!-- Analytics Section -->
-    <section v-if="data.analytics" class="analytics">
-      <h2>Analytics</h2>
-      <ul>
-        <li v-for="(count, command) in data.analytics" :key="command">
-          <strong>{{ command }}:</strong> {{ count }}
-        </li>
-      </ul>
-    </section>
+    </div>
+    <div v-else class="loading">
+      <p>Загрузка данных...</p>
+    </div>
   </div>
 </template>
 
 <script>
-// export default {
-//   data() {
-//     return {
-//       data: {}, // Для хранения JSON данных
-//     };
-//   },
-//   methods: {
-//     async fetchData() {
-//       try {
-//         const response = await fetch("/data.json"); // Загружаем JSON
-//         this.data = await response.json(); // Сохраняем в state
-//       } catch (error) {
-//         console.error("Error fetching data:", error);
-//       }
-//     },
-//   },
-//   created() {
-//     this.fetchData(); // Загружаем данные при инициализации
-//   },
-// };
-
+import axios from 'axios';
 
 export default {
   data() {
     return {
-      data: {}, // Для хранения данных из API
+      data: null,
     };
   },
-  methods: {
-    async fetchData() {
-      try {
-        const response = await fetch("http://127.0.0.1:5000/api/data"); // Запрашиваем данные
-        this.data = await response.json(); // Сохраняем в state
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    },
-  },
-  created() {
-    this.fetchData(); // Загружаем данные при инициализации
+  mounted() {
+    axios.get('http://localhost:5000/api/data')
+      .then(response => {
+        this.data = response.data;
+      })
+      .catch(error => {
+        console.error("Ошибка при загрузке данных:", error);
+      });
   },
 };
-
-
 </script>
 
-<style>
-  #app{
-    font-family: Avenir, Helvetica, Arial, sans-serif;
-    margin: 20px;
-  }
+<style scoped>
+/* Информация о пользователе */
+.user-info {
+  margin-bottom: 20px;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  color: #333;
+}
 
-  header{
-    text-align: center;
-    margin-bottom: 20px;
-  }
+.user-info p {
+  margin: 5px 0;
+  font-size: 20px;
+  color: #ddd;
+}
 
-  section{
-    margin-bottom: 20px;
-  }
+/* Сообщения */
+.messages {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
 
-  h2 {
-    color: #2c3e50;
-    margin-bottom: 10px;
-  }
+/* Отдельное сообщение */
+.message {
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
 
-  ul {
-    list-style: none;
-    padding: 0;
-  }
+/* Время сообщения */
+.message-meta {
+  font-size: 12px;
+  color: #999;
+  margin-bottom: 5px;
+}
 
-  li {
-    margin: 5px 0;
-  }
+/* Текст сообщения */
+.message-text {
+  font-size: 14px;
+  color: #161616;
+  word-wrap: break-word;
+  font-weight: 600;
+}
 
-  .message {
-    border: 1px solid #ddd;
-    padding: 10px;
-    border-radius: 5px;
-    margin-bottom: 10px;
-  }
+/* Стили для пустых сообщений */
+.message-text.no-text {
+  font-style: italic;
+  color: #bbb;
+}
 
-  .analytics ul {
-    display: flex;
-    flex-wrap: wrap;
-  }
-
-  .analytics li {
-    margin-right: 10px;
-  }
+/* Индикатор загрузки */
+.loading {
+  text-align: center;
+  color: #999;
+  font-size: 16px;
+}
 </style>
