@@ -10,6 +10,11 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
                     level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
+
+
+
+
 # Инициализация бота с токеном
 bot_token = '7029933175:AAEI_Vx4kvq0IVEVruCyxt0uAzYkxaLtnj0'  # Замените на токен вашего бота
 admin_id = '5405355475'  # Замените на ваш ID (это тот человек, который может отдавать команды)
@@ -22,30 +27,27 @@ admin_id = '5405355475'  # Замените на ваш ID (это тот чел
 # Функция для загрузки чатов из файла chats.json с указанием кодировки
 def load_chats():
     try:
-        with open('chats.json', 'r', encoding='utf-8') as file:  # Указываем кодировку utf-8
+        with open('chats.json', 'r', encoding='utf-8') as file:  
             return json.load(file)
     except (FileNotFoundError, json.JSONDecodeError):
-        return {}  # Возвращаем пустой словарь, если файл не существует или пуст
+        return {}  
     except UnicodeDecodeError as e:
         logger.error(f"Ошибка декодирования файла: {e}")
-        return {}  # Возвращаем пустой словарь при ошибке кодировки
+        return {}  
 
 # Функция для сохранения чатов в файл
 def save_chats(chats):
-    logger.info(f"Сохраняем чаты: {chats}")  # Логирование перед сохранением
+    logger.info(f"Сохраняем чаты: {chats}")  
     with open('chats.json', 'w', encoding='utf-8') as file:
         json.dump(chats, file, ensure_ascii=False, indent=4)
 
 # Функция для сохранения ID пользователей
 def save_user_ids(user_ids):
-    # Преобразуем множества в списки перед сохранением
     user_ids_dict_serializable = {str(chat_id): list(user_ids_set) for chat_id, user_ids_set in user_ids.items()}
     
-    logger.info(f"Сохраняем ID пользователей: {user_ids_dict_serializable}")  # Логирование перед сохранением
+    logger.info(f"Сохраняем ID пользователей: {user_ids_dict_serializable}") 
     with open('user_ids.json', 'w', encoding='utf-8') as file:
         json.dump(user_ids_dict_serializable, file, ensure_ascii=False, indent=4)
-
-
 
 # Загружаем ID пользователей из файла
 def load_user_ids():
@@ -56,12 +58,9 @@ def load_user_ids():
         return {}  # Возвращаем пустой словарь, если файл не существует или пуст
 
 
-
-
-
-
 # Словарь для хранения ID пользователей по чатам
 user_ids_dict = load_user_ids()
+
 
 # Функция для отслеживания добавления новых пользователей
 async def track_new_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -84,6 +83,8 @@ async def track_new_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Сохраняем обновленный список ID пользователей в файл
     save_user_ids(user_ids_dict)
+
+
 
 # Функция для удаления пользователя
 async def kick_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -110,6 +111,7 @@ async def kick_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text(f"Пользователь {user_id} был удален из чата {chat_id}")
         except Exception as e:
             await update.message.reply_text(f"Не удалось удалить пользователя из чата {chat_id}: {e}")
+
 
 
 # Функция для сбора всех ID пользователей из всех чатов
@@ -142,9 +144,6 @@ async def collect_user_ids(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 
-
-
-
 # Функция для обработки добавления бота в чат
 async def handle_bot_added(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
@@ -168,8 +167,6 @@ async def handle_bot_added(update: Update, context: ContextTypes.DEFAULT_TYPE):
             logger.info(f"Чат {chat_id} добавлен в список.")
         else:
             logger.info(f"Чат {chat_id} уже существует.")
-
-
 
 
 
@@ -197,13 +194,6 @@ async def track_user_message(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
 
 
-
-
-
-
-
-
-
 # Основная функция для запуска бота
 def main():
     application = Application.builder().token(bot_token).build()
@@ -214,20 +204,14 @@ def main():
     # Обработчик команды /collect_user_ids для сбора всех ID пользователей
     application.add_handler(CommandHandler("collect_user_ids", collect_user_ids))
 
-    # # Обработчик команды /add_chat для добавления чата в chats.json
-    # application.add_handler(CommandHandler("add_chat", add_chat))
-
     # Обработчик для отслеживания добавления новых пользователей
     application.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, track_new_user))
-
 
      # Обработчик для добавления чата при добавлении бота
     application.add_handler(ChatMemberHandler(handle_bot_added))
 
-
     # Обработчик для отслеживания сообщений пользователей
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, track_user_message))
-
 
     # Запуск бота
     application.run_polling()
