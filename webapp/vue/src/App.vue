@@ -26,7 +26,7 @@
       </div>
     </div>
     <div v-else class="loading">
-      <p>Загрузка данных...</p>
+      <p>Загрузка данных...щащаща</p>
     </div>
   </div>
 </template>
