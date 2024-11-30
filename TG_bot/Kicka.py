@@ -19,13 +19,16 @@ admin_id = '5405355475'  # Замените на ваш ID (это тот чел
 
 
 
-# Функция для загрузки чатов из файла chats.json
+# Функция для загрузки чатов из файла chats.json с указанием кодировки
 def load_chats():
     try:
-        with open('chats.json', 'r') as file:
+        with open('chats.json', 'r', encoding='utf-8') as file:  # Указываем кодировку utf-8
             return json.load(file)
     except (FileNotFoundError, json.JSONDecodeError):
         return {}  # Возвращаем пустой словарь, если файл не существует или пуст
+    except UnicodeDecodeError as e:
+        logger.error(f"Ошибка декодирования файла: {e}")
+        return {}  # Возвращаем пустой словарь при ошибке кодировки
 
 # Функция для сохранения чатов в файл
 def save_chats(chats):
@@ -33,11 +36,16 @@ def save_chats(chats):
     with open('chats.json', 'w', encoding='utf-8') as file:
         json.dump(chats, file, ensure_ascii=False, indent=4)
 
-# Функция для сохранения ID пользователей с красивым форматированием и кодировкой
+# Функция для сохранения ID пользователей
 def save_user_ids(user_ids):
-    logger.info(f"Сохраняем ID пользователей: {user_ids}")  # Логирование перед сохранением
+    # Преобразуем множества в списки перед сохранением
+    user_ids_dict_serializable = {str(chat_id): list(user_ids_set) for chat_id, user_ids_set in user_ids.items()}
+    
+    logger.info(f"Сохраняем ID пользователей: {user_ids_dict_serializable}")  # Логирование перед сохранением
     with open('user_ids.json', 'w', encoding='utf-8') as file:
-        json.dump(user_ids, file, ensure_ascii=False, indent=4)
+        json.dump(user_ids_dict_serializable, file, ensure_ascii=False, indent=4)
+
+
 
 # Загружаем ID пользователей из файла
 def load_user_ids():
@@ -164,6 +172,7 @@ async def handle_bot_added(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 
+
 # Функция для отслеживания сообщений пользователей и записи их ID
 async def track_user_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id  # Получаем ID пользователя, который отправил сообщение
@@ -172,20 +181,21 @@ async def track_user_message(update: Update, context: ContextTypes.DEFAULT_TYPE)
     # Логируем ID пользователя
     logger.info(f"Пользователь с ID {user_id} отправил сообщение в чат {chat_id}")
 
-    # Проверка, существует ли чат в user_ids_dict
+    # Загружаем текущий список пользователей
     if chat_id not in user_ids_dict:
-        # Если чат не существует в словаре, игнорируем пользователя
-        logger.warning(f"Чат с ID {chat_id} не найден в списке чатов. Сообщение пользователя {user_id} не добавлено.")
-        return
+        user_ids_dict[chat_id] = []
 
-    # Добавляем ID пользователя в set, если его нет
-    user_ids_dict[chat_id].add(user_id)
+    # Проверяем, есть ли уже этот пользователь в списке для чата
+    if user_id not in user_ids_dict[chat_id]:
+        user_ids_dict[chat_id].append(user_id)  # Добавляем пользователя, если его нет
 
     # Логируем обновленный список пользователей
     logger.info(f"Обновленный список пользователей для чата {chat_id}: {user_ids_dict[chat_id]}")
 
     # Сохраняем обновленный список ID пользователей в файл
     save_user_ids(user_ids_dict)
+
+
 
 
 
