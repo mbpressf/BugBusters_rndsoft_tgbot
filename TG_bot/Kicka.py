@@ -6,6 +6,7 @@ from telegram.ext import ChatMemberHandler
 import time
 from httpx import ConnectError
 import re
+import json
 
 
 # Включаем логирование
@@ -17,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 # Инициализация бота с токеном
 bot_token = '7029933175:AAEI_Vx4kvq0IVEVruCyxt0uAzYkxaLtnj0'  # Замените на токен вашего бота
-admin_ids = {7004441787, 5405355475}  # Используем множество для уникальности
+# admin_ids = {7004441787, 5405355475}  # Используем множество для уникальности
 
 
 
@@ -28,13 +29,19 @@ admin_ids = {7004441787, 5405355475}  # Используем множество 
 
 
 
-# Функция, реагирующая на команды /start и /старт
-async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # Получаем имя пользователя, если доступно
-    user_name = update.message.from_user.first_name
-    # Отправляем приветственное сообщение
-    await update.message.reply_text(f"Привет, {user_name}! Это бот, который поможет тебе управлять чатами.")
 
+
+# Путь к конфигурационному файлу
+CONFIG_FILE_PATH = "config.json"
+
+# Загрузка конфигурации
+def load_config():
+    try:
+        with open(CONFIG_FILE_PATH, "r", encoding="utf-8") as file:
+            return json.load(file)
+    except FileNotFoundError:
+        return {"admin_ids": []}
+    
 
 
 
@@ -154,10 +161,21 @@ def save_removed_user(user_id, user_name, user_status, removed_from_chats):
 
 
 
+
+
+
+
+
+
+
+
+
 # Функция для удаления пользователя из user_ids.json и добавления в users_ids_rm.json
 async def kick_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Загружаем конфигурацию и получаем список администраторов
+    config = load_config()
     # Проверка, что команда пришла от администратора
-    if update.message.from_user.id not in admin_ids:
+    if update.message.from_user.id not in config["admin_ids"]:
         await update.message.reply_text("У вас нет прав на выполнение этой команды.")
         return
 
@@ -283,8 +301,10 @@ async def kick_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # Функция для сбора всех ID пользователей из всех чатов
 async def collect_user_ids(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Загружаем конфигурацию и получаем список администраторов
+    config = load_config()
     # Проверка, что команда пришла от администратора
-    if update.message.from_user.id not in admin_ids:
+    if update.message.from_user.id not in config["admin_ids"]:
         await update.message.reply_text("У вас нет прав на выполнение этой команды.")
         return
 
@@ -379,12 +399,119 @@ async def id_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     await update.message.reply_text(
         f"Ваш ID: {user_id}\n\n"
-        f"Для того, чтобы видеть цифровые ID в профилях, необходимо сделать следующее: \n"
-        f"1. Установить актуальную версию приложения Telegram Desktop (https://desktop.telegram.org/)\n"
-        f"2. Войти в свой аккаунт.\n"
-        f"3. Перейти в раздел Настройки › Продвинутые настройки › Экспериментальные настройки и включить опцию Show Peer IDs in Profile."
+        f"🌟 Для того, чтобы видеть цифровые ID каждого аккаунта, группы, канала и бота в Telegram, необходимо сделать следующее:\n\n"
+        f"1️⃣ Установить актуальную версию приложения Telegram Desktop: https://desktop.telegram.org/\n"
+        f"2️⃣ Войти в свой аккаунт.\n"
+        f"3️⃣ Перейти в раздел: Настройки › Продвинутые настройки › Экспериментальные настройки и включить опцию 'Show Peer IDs in Profile'.\n\n"
+        f"🚀 После этого вы сможете видеть ID всех пользователей и объектов в Telegram!"
     )
     logger.info(f"Сообщение не переслано. ID отправителя: {user_id}")
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Сохранение конфигурации
+def save_config(config):
+    with open(CONFIG_FILE_PATH, "w", encoding="utf-8") as file:
+        json.dump(config, file, indent=4, ensure_ascii=False)
+
+
+# Команда /start, которая приветствует пользователя и сообщает, админ ли он
+async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    config = load_config()
+    user_id = update.message.from_user.id
+    if user_id in config["admin_ids"]:
+        await update.message.reply_text(
+            f"Привет, администратор! 👑 Ваш ID: {user_id}\n\n"
+            "Вы имеете доступ к административным функциям бота."
+        )
+        logger.info(f"Приветствие администратора. ID: {user_id}")
+    else:
+        await update.message.reply_text(
+            f"Привет, пользователь! 👋 Ваш ID: {user_id}\n\n"
+            "Вы можете использовать обычные команды бота."
+        )
+        logger.info(f"Приветствие пользователя. ID: {user_id}")
+
+# Команда /addadmin для добавления администратора
+async def add_admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Получаем ID пользователя, который отправил команду
+    user_id = update.message.from_user.id
+    
+    # Проверяем, является ли отправитель администратором
+    config = load_config()
+    if user_id not in config["admin_ids"]:
+        await update.message.reply_text("У вас нет прав для добавления администраторов.")
+        return
+    
+    # Проверяем, был ли указан ID нового администратора
+    if len(context.args) != 1:
+        await update.message.reply_text("Пожалуйста, укажите ID пользователя для добавления в администраторы.")
+        return
+    
+    try:
+        new_admin_id = int(context.args[0])  # Преобразуем аргумент в целое число
+    except ValueError:
+        await update.message.reply_text("ID должен быть числом.")
+        return
+    
+    # Добавляем нового администратора, если его нет в списке
+    if new_admin_id not in config["admin_ids"]:
+        config["admin_ids"].append(new_admin_id)
+        save_config(config)
+        await update.message.reply_text(f"Пользователь с ID {new_admin_id} был добавлен в администраторы.")
+        logger.info(f"ID {new_admin_id} добавлен в администраторы.")
+    else:
+        await update.message.reply_text(f"Пользователь с ID {new_admin_id} уже является администратором.")
+
+# Команда /removeadmin для удаления администратора
+async def remove_admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Получаем ID пользователя, который отправил команду
+    user_id = update.message.from_user.id
+    
+    # Проверяем, является ли отправитель администратором
+    config = load_config()
+    if user_id not in config["admin_ids"]:
+        await update.message.reply_text("У вас нет прав для удаления администраторов.")
+        return
+    
+    # Проверяем, был ли указан ID администратора для удаления
+    if len(context.args) != 1:
+        await update.message.reply_text("Пожалуйста, укажите ID пользователя для удаления из администраторов.")
+        return
+    
+    try:
+        admin_id_to_remove = int(context.args[0])  # Преобразуем аргумент в целое число
+    except ValueError:
+        await update.message.reply_text("ID должен быть числом.")
+        return
+    
+    # Удаляем администратора, если он есть в списке
+    if admin_id_to_remove in config["admin_ids"]:
+        config["admin_ids"].remove(admin_id_to_remove)
+        save_config(config)
+        await update.message.reply_text(f"Пользователь с ID {admin_id_to_remove} был удален из администраторов.")
+        logger.info(f"ID {admin_id_to_remove} удален из администраторов.")
+    else:
+        await update.message.reply_text(f"Пользователь с ID {admin_id_to_remove} не найден в списке администраторов.")
+
+
+
+
+
+
+
+
+
 
 
 
@@ -423,6 +550,10 @@ def main():
 
      # Обработчик для добавления чата при добавлении бота
     application.add_handler(ChatMemberHandler(handle_bot_added))
+
+    application.add_handler(CommandHandler("addadmin", add_admin_command))
+
+    application.add_handler(CommandHandler("removeadmin", remove_admin_command))
 
     # Обработчик для отслеживания сообщений пользователей
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, track_user_message))
