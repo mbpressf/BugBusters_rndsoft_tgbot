@@ -7,6 +7,17 @@ import time
 from httpx import ConnectError
 import re
 import json
+import json
+import os
+from datetime import datetime
+from telegram import Update
+from telegram.ext import ContextTypes
+import json
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
+import logging
+from datetime import datetime
+# import app
 
 
 # Включаем логирование
@@ -18,6 +29,7 @@ logger = logging.getLogger(__name__)
 
 # Инициализация бота с токеном
 bot_token = '7029933175:AAEI_Vx4kvq0IVEVruCyxt0uAzYkxaLtnj0'  # Замените на токен вашего бота
+URL = 'https://t.me/revrestest_bot/revrestbotpokazethui'
 # admin_ids = {7004441787, 5405355475}  # Используем множество для уникальности
 
 
@@ -32,14 +44,17 @@ bot_token = '7029933175:AAEI_Vx4kvq0IVEVruCyxt0uAzYkxaLtnj0'  # Замените
 
 
 # Путь к конфигурационному файлу
-CONFIG_FILE_PATH = "config.json"
+CONFIG_FILE_PATH = r"config.json"
+DATA_FILE_PATH = 'data.json'
 
 # Загрузка конфигурации
 def load_config():
     try:
-        with open(CONFIG_FILE_PATH, "r", encoding="utf-8") as file:
+        with open(r'C:\Users\Maksim\Desktop\BugBusters_rndsoft_tgbot\TG_bot\config.json', "r", encoding="utf-8") as file:
+            print('ПИЗДАда')
             return json.load(file)
     except FileNotFoundError:
+        print('ПИЗДА')
         return {"admin_ids": []}
     
 
@@ -73,11 +88,13 @@ def save_user_ids(user_ids):
 
 def load_user_ids():
     try:
+        print('НОРМАЛЕК')
         with open('user_ids.json', 'r', encoding='utf-8') as file:
             data = json.load(file)
             # Преобразуем списки обратно в множества
             return {int(chat_id): set(user_ids) for chat_id, user_ids in data.items()}
     except (FileNotFoundError, json.JSONDecodeError):
+        print('ПИЗДЕЦЕСЛИ ВЫВЕДДТСЯ')
         return {}
 
 
@@ -419,6 +436,78 @@ async def id_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 
+
+# Параметры логирования
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    level=logging.INFO)
+logger = logging.getLogger(__name__)  # Исправлено
+
+
+CHAT_LOG_FILE = 'chat_messages.json'
+
+# Функция для сохранения сообщений в файл
+def save_chat_messages(chat_data):
+    # Сохраняем данные в json файл
+    with open(CHAT_LOG_FILE, 'w', encoding='utf-8') as f:
+        json.dump(chat_data, f, ensure_ascii=False, indent=4)
+
+# Функция для отслеживания сообщений и записи их в файл
+async def track_chat_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    chat_id = str(update.effective_chat.id)  # ID чата как строка (для JSON-совместимости)
+    chat_username = update.effective_chat.username  # Получаем username чата, если он есть
+    chat_name = update.effective_chat.title  # Получаем имя чата
+
+    # Получаем информацию о сообщении
+    user_id = update.message.from_user.id
+    message_text = update.message.text
+    timestamp = update.message.date.strftime('%Y-%m-%d %H:%M:%S')
+
+    # Проверяем, существует ли файл
+    if os.path.exists(CHAT_LOG_FILE):
+        # Открываем файл только если он не пустой
+        with open(CHAT_LOG_FILE, 'r', encoding='utf-8') as f:
+            try:
+                chat_data = json.load(f)
+            except json.JSONDecodeError:
+                # Если файл пустой или поврежден, создаем новый словарь
+                chat_data = {}
+    else:
+        chat_data = {}
+
+    # Если чат не существует в данных, создаём его
+    if chat_id not in chat_data:
+        chat_data[chat_id] = {
+            'name': chat_name,
+            'username': chat_username,
+            'messages': []
+        }
+
+    # Добавляем сообщение в список сообщений чата
+    # Добавляем сообщение в список сообщений чата
+    chat_data[chat_id]['messages'].append({
+        'uid': user_id,
+        'username': update.message.from_user.username,  # Добавляем username пользователя
+        'time': timestamp,
+        'text_message': message_text
+    })
+
+
+    # Сохраняем обновленные данные в файл
+    with open(CHAT_LOG_FILE, 'w', encoding='utf-8') as f:
+        json.dump(chat_data, f, ensure_ascii=False, indent=4)
+
+    # Логируем успешную запись
+    logger.info(f"Сообщение от пользователя {user_id} добавлено в чат {chat_name} ({chat_id})")
+
+
+
+
+
+
+
+
+
+
 # Сохранение конфигурации
 def save_config(config):
     with open(CONFIG_FILE_PATH, "w", encoding="utf-8") as file:
@@ -506,13 +595,34 @@ async def remove_admin_command(update: Update, context: ContextTypes.DEFAULT_TYP
 
 
 
+# Функция для обработки команды /start
+async def web_stat(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    config = load_config()
+    # Проверка, что команда пришла от администратора
+    if update.message.from_user.id not in config["admin_ids"]:
+        await update.message.reply_text("У вас нет прав на выполнение этой команды.")
+        return
+    
+    # Создаем кнопку для открытия мини-приложения
+    keyboard = [
+        [InlineKeyboardButton("Открыть мини-приложение", url=URL)]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    # Отправляем сообщение с кнопкой
+    await update.message.reply_text(
+        "Привет, ты авторизован, как администратор! Нажми на кнопку ниже, чтобы открыть мини-приложение.",
+        reply_markup=reply_markup
+    )
 
 
 
 
 
-
-
+async def handle_all_messages(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await track_user_message(update, context)  # Логирование пользователя
+    await start_message_handler(update, context)  # Обработка команды
+    await track_chat_message(update, context)  # Сохранение сообщений в файл
 
 
 
@@ -533,8 +643,9 @@ def main():
     # Обработчик для команды /id
     application.add_handler(CommandHandler("id", id_command))
 
-     # Обработчик для команды /start и /старт с помощью MessageHandler
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, start_message_handler))
+    application.add_handler(CommandHandler("web_chat", web_stat))
+
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_all_messages))
 
     # Обработчик для команды /start (латиница)
     application.add_handler(CommandHandler("start", start_command))
@@ -555,8 +666,7 @@ def main():
 
     application.add_handler(CommandHandler("removeadmin", remove_admin_command))
 
-    # Обработчик для отслеживания сообщений пользователей
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, track_user_message))
+    
 
     # Запуск бота
     try:
@@ -574,5 +684,47 @@ client = httpx.Client(verify=False)
 
 
 
+
+
+
+
+
+from flask import Flask, jsonify, request
+from flask_cors import CORS
+import telebot
+from threading import Thread
+import json
+
+# Инициализация Flask
+app = Flask(__name__)
+CORS(app)
+
+
+
+# Функция для загрузки данных из файла
+def load_data():
+    with open(r'C:\Users\Maksim\Desktop\BugBusters_rndsoft_tgbot\TG_bot\chat_messages.json', 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+
+
+data = load_data()
+# 1. API для Vue.js
+@app.route('/api/data', methods=['GET'])
+def get_data():
+    """Возвращает данные из файла data.json."""
+    data = load_data()
+    return jsonify(data)
+
+
+
+# 3. Запуск Flask и Telebot параллельно
+def run_flask():
+    app.run(host='0.0.0.0', port=5000)
+
+
+
 if __name__ == '__main__':
+    
+    Thread(target=run_flask).start()
     main()
