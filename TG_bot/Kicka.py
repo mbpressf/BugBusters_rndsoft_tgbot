@@ -1,23 +1,17 @@
-import json
-from telegram import Update, Bot
+from telegram import Update, Bot, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 import logging
 from telegram.ext import ChatMemberHandler
 import time
+import httpx
 from httpx import ConnectError
-import re
-import json
+from datetime import datetime
 import json
 import os
-from datetime import datetime
-from telegram import Update
-from telegram.ext import ContextTypes
-import json
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
-import logging
-from datetime import datetime
-# import app
+import re
+from flask import Flask, jsonify, request
+from flask_cors import CORS
+from threading import Thread
 
 
 # Включаем логирование
@@ -25,23 +19,9 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
                     level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
-
 # Инициализация бота с токеном
-bot_token = '7675218169:AAGLBNmfPS83oKXEjHdVRpxQ0T8-rKd1_Lo'  # Замените на токен вашего бота
+bot_token = ''  # Замените на токен вашего бота
 URL = 'https://t.me/rnd_manager_bot/spendwm'
-# admin_ids = {7004441787, 5405355475}  # Используем множество для уникальности
-
-
-
-
-
-
-
-
-
-
-
 
 # Путь к конфигурационному файлу
 CONFIG_FILE_PATH = r"config.json"
@@ -51,16 +31,10 @@ DATA_FILE_PATH = 'data.json'
 def load_config():
     try:
         with open('./TG_bot/config.json', "r", encoding="utf-8") as file:
-            print('ПИЗДАда')
             return json.load(file)
     except FileNotFoundError:
-        print('ПИЗДА')
         return {"admin_ids": []}
     
-
-
-
-
 # Функция для загрузки чатов из файла chats.json с указанием кодировки
 def load_chats():
     try:
@@ -88,19 +62,15 @@ def save_user_ids(user_ids):
 
 def load_user_ids():
     try:
-        print('НОРМАЛЕК')
         with open('./TG_bot/user_ids.json', 'r', encoding='utf-8') as file:
             data = json.load(file)
             # Преобразуем списки обратно в множества
             return {int(chat_id): set(user_ids) for chat_id, user_ids in data.items()}
     except (FileNotFoundError, json.JSONDecodeError):
-        print('ПИЗДЕЦЕСЛИ ВЫВЕДДТСЯ')
         return {}
-
 
 # Словарь для хранения ID пользователей по чатам
 user_ids_dict = load_user_ids()
-
 
 # Функция для отслеживания добавления новых пользователей
 async def track_new_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -124,20 +94,11 @@ async def track_new_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Сохраняем обновленный список ID пользователей в файл
     save_user_ids(user_ids_dict)
 
-
-
-
-
-
-
-
 def escape_markdown_v2(text: str) -> str:
     """Экранирует специальные символы MarkdownV2."""
     text = re.sub(r'([\\`*_{}[\]()#+\-.!_])', r'\\\1', text)  # Экранируем обычные специальные символы
     text = text.replace('(', r'\(').replace(')', r'\)')  # Экранируем круглые скобки
     return text
-
-
 
 def save_removed_user(user_id, user_name, user_status, removed_from_chats):
     try:
@@ -176,21 +137,7 @@ def save_removed_user(user_id, user_name, user_status, removed_from_chats):
     except Exception as e:
         logger.error(f"Ошибка при сохранении удалённого пользователя {user_id}: {e}")
 
-
-
-
-
-
-
-
-
-
-
-<<<<<<< Updated upstream
-
-=======
 # Функция для удаления пользователя из user_ids.json и добавления в users_ids_rm.json
->>>>>>> Stashed changes
 async def kick_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Загружаем конфигурацию и получаем список администраторов
     config = load_config()
@@ -243,7 +190,6 @@ async def kick_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 chat_username = chat_title.username
 
                 # Проверка на наличие username
-<<<<<<< Updated upstream
                 chat_url = f"https://t.me/{chat_username}" if chat_username else f"ID чата: {chat_id}"
 
                 # Добавляем чат в список удалённых
@@ -254,31 +200,11 @@ async def kick_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     'chat_type': chat_type,
                     'chat_description': chat_description
                 })
-=======
-                if chat_username:
-                    chat_url = f"https://t.me/{chat_username}"
-                else:
-                    chat_url = f"ID чата: {chat_id}"  # Просто выводим ID чата, если нет username
-                    message = (
-                    f"Пользователь: @{user_name} \(ID: ||\{user_id}||\)\n"
-                    f"Статус в чате: {user_status}\n"
-                    f"Дата присоединения: {user_joined}\n\n"
-                    f"Чат: [{chat_name}]({chat_url}) \(ID: ||\{chat_id}||\)\n"
-                    f"Тип чата: {chat_type}\n"
-                    f"Описание чата: {chat_description}\n\n"
-                    f"Пользователь был удален из чата"
-                )
-
-
-                # Отправляем сообщение в формате MarkdownV2
-                await update.message.reply_text(message, parse_mode='MarkdownV2')
->>>>>>> Stashed changes
 
                 break  # Прерываем цикл повторных попыток, если операция выполнена успешно
 
             except ConnectError as e:
                 if attempt < attempts - 1:
-<<<<<<< Updated upstream
                     time.sleep(3)  # Задержка между попытками
                 else:
                     removed_from_chats.append({
@@ -296,15 +222,6 @@ async def kick_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     'chat_type': 'Неизвестно',
                     'chat_description': f"Ошибка: {e}"
                 })
-=======
-                    pass
-                else:
-                    # await update.message.reply_text(f"Не удалось удалить пользователя из чата {chat_id}: {e}")
-                    pass
-            except Exception as e:
-                pass
-                # await update.message.reply_text(f"Не удалось удалить пользователя из чата {chat_id}: {e}")
->>>>>>> Stashed changes
 
     # Сохраняем обновлённый список пользователей
     save_user_ids(user_ids_dict)
@@ -328,14 +245,6 @@ async def kick_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Отправляем итоговое сообщение
     await update.message.reply_text(message, parse_mode='Markdown')
 
-
-
-
-
-
-
-
-
 # Функция для сбора всех ID пользователей из всех чатов
 async def collect_user_ids(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Загружаем конфигурацию и получаем список администраторов
@@ -344,8 +253,7 @@ async def collect_user_ids(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.message.from_user.id not in config["admin_ids"]:
         await update.message.reply_text("У вас нет прав на выполнение этой команды.")
         return
-
-
+    
     # Загружаем чаты
     chats = load_chats()
     all_user_ids = {}  # Инициализируем словарь для хранения ID пользователей по чатам
@@ -369,9 +277,6 @@ async def collect_user_ids(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Сохраняем все собранные ID пользователей в файл
     save_user_ids(all_user_ids)
     await update.message.reply_text(f"ID пользователей успешно собраны и сохранены.")
-
-
-
 
 # Функция для обработки добавления бота в чат
 async def handle_bot_added(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -397,8 +302,6 @@ async def handle_bot_added(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             logger.info(f"Чат {chat_id} уже существует.")
 
-
-
 # Функция для отслеживания сообщений пользователей и записи их ID
 async def track_user_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id  # Получаем ID пользователя, который отправил сообщение
@@ -420,17 +323,11 @@ async def track_user_message(update: Update, context: ContextTypes.DEFAULT_TYPE)
     # Сохраняем обновленный список ID пользователей в файл
     save_user_ids(user_ids_dict)
 
-
-
-
-
 # Обработчик для команды /старт
 async def start_message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Проверка, начинается ли сообщение с "/старт"
     if update.message.text.lower().startswith("/старт"):
         await start_command(update, context)
-
-
 
 async def id_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
@@ -444,24 +341,10 @@ async def id_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     logger.info(f"Сообщение не переслано. ID отправителя: {user_id}")
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 # Параметры логирования
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
 logger = logging.getLogger(__name__)  # Исправлено
-
 
 CHAT_LOG_FILE = './TG_bot/chat_messages.json'
 
@@ -503,14 +386,12 @@ async def track_chat_message(update: Update, context: ContextTypes.DEFAULT_TYPE)
         }
 
     # Добавляем сообщение в список сообщений чата
-    # Добавляем сообщение в список сообщений чата
     chat_data[chat_id]['messages'].append({
         'uid': user_id,
         'username': update.message.from_user.username,  # Добавляем username пользователя
         'time': timestamp,
         'text_message': message_text
     })
-
 
     # Сохраняем обновленные данные в файл
     with open(CHAT_LOG_FILE, 'w', encoding='utf-8') as f:
@@ -519,20 +400,10 @@ async def track_chat_message(update: Update, context: ContextTypes.DEFAULT_TYPE)
     # Логируем успешную запись
     logger.info(f"Сообщение от пользователя {user_id} добавлено в чат {chat_name} ({chat_id})")
 
-
-
-
-
-
-
-
-
-
 # Сохранение конфигурации
 def save_config(config):
     with open(CONFIG_FILE_PATH, "w", encoding="utf-8") as file:
         json.dump(config, file, indent=4, ensure_ascii=False)
-
 
 # Команда /start, которая приветствует пользователя и сообщает, админ ли он
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -613,8 +484,6 @@ async def remove_admin_command(update: Update, context: ContextTypes.DEFAULT_TYP
     else:
         await update.message.reply_text(f"Пользователь с ID {admin_id_to_remove} не найден в списке администраторов.")
 
-
-
 # Функция для обработки команды /start
 async def web_stat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     config = load_config()
@@ -635,16 +504,10 @@ async def web_stat(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=reply_markup
     )
 
-
-
-
-
 async def handle_all_messages(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await track_user_message(update, context)  # Логирование пользователя
     await start_message_handler(update, context)  # Обработка команды
     await track_chat_message(update, context)  # Сохранение сообщений в файл
-
-
 
 def retry(func, retries=3, delay=5):
     for _ in range(retries):
@@ -654,7 +517,6 @@ def retry(func, retries=3, delay=5):
             print(f"Error: {e}, retrying...")
             time.sleep(delay)
     raise Exception("Max retries reached")
-
 
 # Основная функция для запуска бота
 def main():
@@ -686,8 +548,6 @@ def main():
 
     application.add_handler(CommandHandler("rmadmin", remove_admin_command))
 
-    
-
     # Запуск бота
     try:
         application.run_polling()
@@ -695,38 +555,17 @@ def main():
         print(f"Polling failed: {e}")
         retry(application.run_polling)
 
-
-import httpx
-import ssl
-
 # Пример настройки для игнорирования SSL ошибок (для тестирования)
 client = httpx.Client(verify=False)
-
-
-
-
-
-
-
-
-from flask import Flask, jsonify, request
-from flask_cors import CORS
-import telebot
-from threading import Thread
-import json
 
 # Инициализация Flask
 app = Flask(__name__)
 CORS(app)
 
-
-
 # Функция для загрузки данных из файла
 def load_data():
     with open('./TG_bot/chat_messages.json', 'r', encoding='utf-8') as f:
         return json.load(f)
-
-
 
 data = load_data()
 # 1. API для Vue.js
@@ -736,15 +575,10 @@ def get_data():
     data = load_data()
     return jsonify(data)
 
-
-
 # 3. Запуск Flask и Telebot параллельно
 def run_flask():
     app.run(host='0.0.0.0', port=5000)
 
-
-
 if __name__ == '__main__':
-    
     Thread(target=run_flask).start()
     main()
