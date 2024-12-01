@@ -187,7 +187,6 @@ def save_removed_user(user_id, user_name, user_status, removed_from_chats):
 
 
 
-# Функция для удаления пользователя из user_ids.json и добавления в users_ids_rm.json
 async def kick_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Загружаем конфигурацию и получаем список администраторов
     config = load_config()
@@ -205,7 +204,6 @@ async def kick_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Загружаем чаты и список пользователей
     chats = load_chats()
-    
     removed_from_chats = []  # Список чатов, из которых был удалён пользователь
 
     bot = Bot(token=bot_token)
@@ -224,89 +222,78 @@ async def kick_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 # Получаем информацию о пользователе
                 user = await bot.get_chat_member(chat_id, user_id)
                 user_name = user.user.username if user.user.username else f"{user.user.first_name} {user.user.last_name}"
-                user_status = user.status  # Статус пользователя в чате
 
                 # Блокируем пользователя
-                await bot.ban_chat_member(chat_id, user_id)  # Используем ban_chat_member
-
-                # Добавляем информацию о чате в список удалённых
-                removed_from_chats.append({
-                    'name': chat_info['chat_name'],
-                    'id': chat_id,
-                    'type': chat_info['chat_type']
-                })
-
-
-
-                print("userdict =",user_ids_dict, '\n')
-                print(type(chat_id))
-                print(type(list(user_ids_dict.keys())[0]))
+                await bot.ban_chat_member(chat_id, user_id)
 
                 # Удаляем пользователя из списка пользователей этого чата
                 chat_id = int(chat_id)
-
                 if chat_id in user_ids_dict:
-                    print(f"удаляем{user_id}из{chat_id}, \n\n")
                     user_ids_dict[chat_id].discard(user_id)
 
-
-                # Если пользователь не забанен, пытаемся получить дату присоединения
-                user_joined = 'Неизвестно'
-                if user_status != 'banned' and hasattr(user, 'joined_date') and user.joined_date:
-                    user_joined = user.joined_date.strftime('%Y-%m-%d %H:%M:%S')
-
-
-
-                # Получаем имя чата и другую информацию
+                # Получаем имя чата, тип и описание
+                chat_title = await bot.get_chat(chat_id)
                 chat_name = chat_info.get('chat_name', 'Неизвестный чат')
-                chat_title = await bot.get_chat(chat_id)  # Для получения дополнительных данных о чате
-                chat_type = chat_title.type  # Тип чата: канал, группа, супергруппа и т.д.
+                chat_type = chat_title.type
                 chat_description = chat_title.description if chat_title.description else 'Нет описания'
-                chat_username = chat_title.username  # Получаем username чата
-                
-                
-                
+                chat_username = chat_title.username
+
                 # Проверка на наличие username
-                if chat_username:
-                    chat_url = f"https://t.me/{chat_username}"
-                else:
-                    chat_url = f"ID чата: {chat_id}"  # Просто выводим ID чата, если нет username
+                chat_url = f"https://t.me/{chat_username}" if chat_username else f"ID чата: {chat_id}"
 
-                message = (
-                    f"Пользователь: @{user_name} \(ID: ||\{user_id}||\)\n"
-                    f"Статус в чате: {user_status}\n"
-                    f"Дата присоединения: {user_joined}\n\n"
-                    f"Чат: [{chat_name}]({chat_url}) \(ID: ||\{chat_id}||\)\n"
-                    f"Тип чата: {chat_type}\n"
-                    f"Описание чата: {chat_description}\n\n"
-                    f"Пользователь был удален из чата"
-                )
-
-
-                # Отправляем сообщение в формате MarkdownV2
-                await update.message.reply_text(message, parse_mode='MarkdownV2')
+                # Добавляем чат в список удалённых
+                removed_from_chats.append({
+                    'chat_name': chat_name,
+                    'chat_id': chat_id,
+                    'chat_url': chat_url,
+                    'chat_type': chat_type,
+                    'chat_description': chat_description
+                })
 
                 break  # Прерываем цикл повторных попыток, если операция выполнена успешно
 
             except ConnectError as e:
                 if attempt < attempts - 1:
-                    await update.message.reply_text(f"Ошибка подключения, повторная попытка через 3 секунды... ({attempt + 1}/{attempts})")
                     time.sleep(3)  # Задержка между попытками
                 else:
-                    await update.message.reply_text(f"Не удалось удалить пользователя из чата {chat_id}: {e}")
+                    removed_from_chats.append({
+                        'chat_name': 'Ошибка',
+                        'chat_id': chat_id,
+                        'chat_url': f"ID чата: {chat_id}",
+                        'chat_type': 'Неизвестно',
+                        'chat_description': f"Ошибка подключения: {e}"
+                    })
             except Exception as e:
-                await update.message.reply_text(f"Не удалось удалить пользователя из чата {chat_id}: {e}")
+                removed_from_chats.append({
+                    'chat_name': 'Ошибка',
+                    'chat_id': chat_id,
+                    'chat_url': f"ID чата: {chat_id}",
+                    'chat_type': 'Неизвестно',
+                    'chat_description': f"Ошибка: {e}"
+                })
 
     # Сохраняем обновлённый список пользователей
-    print("бубубу",user_ids_dict)
     save_user_ids(user_ids_dict)
 
     # Сохраняем информацию о удалённом пользователе
-    print(user_id, user_name, user_status, removed_from_chats)
-    save_removed_user(user_id, user_name, user_status, removed_from_chats)
+    save_removed_user(user_id, user_name, 'banned', removed_from_chats)
 
-    # Отправляем уведомление о завершении операции
-    await update.message.reply_text(f"Пользователь {user_name} был удалён из чатов.")
+    # Формируем итоговое сообщение
+    if removed_from_chats:
+        message = f"Пользователь: @{user_name} (ID: `{user_id}`) был удалён из следующих чатов:\n\n"
+        for chat in removed_from_chats:
+            message += (
+                f"- [{chat['chat_name']}]({chat['chat_url']}) "
+                f"(ID: `{chat['chat_id']}`)\n"
+                f"  Тип чата: {chat['chat_type']}\n"
+                f"  Описание: {chat['chat_description']}\n\n"
+            )
+    else:
+        message = f"Пользователь: @{user_name} (ID: `{user_id}`) не был удалён из ни одного чата."
+
+    # Отправляем итоговое сообщение
+    await update.message.reply_text(message, parse_mode='Markdown')
+
 
 
 

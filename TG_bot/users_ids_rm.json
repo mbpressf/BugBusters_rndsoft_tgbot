@@ -4,9 +4,23 @@
         "status": "member",
         "removed_from_chats": [
             {
-                "name": "кгле6рьрьв",
-                "id": "-1002432859256",
+                "name": "бамбам",
+                "id": "-1002415430874",
                 "type": "supergroup"
+            },
+            {
+                "chat_name": "ᅠ и Максим",
+                "chat_id": -1002372414833,
+                "chat_url": "https://t.me/fofofo12323",
+                "chat_type": "supergroup",
+                "chat_description": "Нет описания"
+            },
+            {
+                "chat_name": "кгле6рьрьв",
+                "chat_id": -1002432859256,
+                "chat_url": "ID чата: -1002432859256",
+                "chat_type": "supergroup",
+                "chat_description": "Нет описания"
             },
             {
                 "name": "ᅠ и Максим",
@@ -14,8 +28,15 @@
                 "type": "supergroup"
             },
             {
-                "name": "бамбам",
-                "id": "-1002415430874",
+                "chat_name": "бамбам",
+                "chat_id": -1002415430874,
+                "chat_url": "ID чата: -1002415430874",
+                "chat_type": "supergroup",
+                "chat_description": "Нет описания"
+            },
+            {
+                "name": "кгле6рьрьв",
+                "id": "-1002432859256",
                 "type": "supergroup"
             }
         ]
