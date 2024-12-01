@@ -1,0 +1,26 @@
+{
+    "-4732771175": {
+        "name": "Чат2",
+        "username": null,
+        "messages": [
+            {
+                "uid": 7004441787,
+                "username": "sonyyyyysh",
+                "time": "2024-12-01 01:29:48",
+                "text_message": "fsdfsd"
+            },
+            {
+                "uid": 7004441787,
+                "username": "sonyyyyysh",
+                "time": "2024-12-01 01:31:03",
+                "text_message": "fsdfsdf"
+            },
+            {
+                "uid": 7004441787,
+                "username": "sonyyyyysh",
+                "time": "2024-12-01 01:31:04",
+                "text_message": "fsdfsdf"
+            }
+        ]
+    }
+}

@@ -28,8 +28,8 @@ logger = logging.getLogger(__name__)
 
 
 # Инициализация бота с токеном
-bot_token = '7029933175:AAEI_Vx4kvq0IVEVruCyxt0uAzYkxaLtnj0'  # Замените на токен вашего бота
-URL = 'https://t.me/revrestest_bot/revrestbotpokazethui'
+bot_token = '7675218169:AAGLBNmfPS83oKXEjHdVRpxQ0T8-rKd1_Lo'  # Замените на токен вашего бота
+URL = 'https://t.me/rnd_manager_bot/spendwm'
 # admin_ids = {7004441787, 5405355475}  # Используем множество для уникальности
 
 
@@ -50,7 +50,7 @@ DATA_FILE_PATH = 'data.json'
 # Загрузка конфигурации
 def load_config():
     try:
-        with open(r'C:\Users\Maksim\Desktop\BugBusters_rndsoft_tgbot\TG_bot\config.json', "r", encoding="utf-8") as file:
+        with open('./TG_bot/config.json', "r", encoding="utf-8") as file:
             print('ПИЗДАда')
             return json.load(file)
     except FileNotFoundError:
@@ -64,7 +64,7 @@ def load_config():
 # Функция для загрузки чатов из файла chats.json с указанием кодировки
 def load_chats():
     try:
-        with open('chats.json', 'r', encoding='utf-8') as file:  
+        with open('./TG_bot/chats.json', 'r', encoding='utf-8') as file:  
             return json.load(file)
     except (FileNotFoundError, json.JSONDecodeError):
         return {}  
@@ -89,7 +89,7 @@ def save_user_ids(user_ids):
 def load_user_ids():
     try:
         print('НОРМАЛЕК')
-        with open('user_ids.json', 'r', encoding='utf-8') as file:
+        with open('./TG_bot/user_ids.json', 'r', encoding='utf-8') as file:
             data = json.load(file)
             # Преобразуем списки обратно в множества
             return {int(chat_id): set(user_ids) for chat_id, user_ids in data.items()}
@@ -143,7 +143,7 @@ def save_removed_user(user_id, user_name, user_status, removed_from_chats):
     try:
         # Загружаем текущие удалённые пользователи
         try:
-            with open('users_ids_rm.json', 'r', encoding='utf-8') as file:
+            with open('./TG_bot/users_ids_rm.json', 'r', encoding='utf-8') as file:
                 removed_users = json.load(file)
         except (FileNotFoundError, json.JSONDecodeError):
             removed_users = {}
@@ -157,7 +157,7 @@ def save_removed_user(user_id, user_name, user_status, removed_from_chats):
             }
 
             # Сохраняем обновленный файл
-            with open('users_ids_rm.json', 'w', encoding='utf-8') as file:
+            with open('./TG_bot/users_ids_rm.json', 'w', encoding='utf-8') as file:
                 json.dump(removed_users, file, ensure_ascii=False, indent=4)
             logger.info(f"Пользователь {user_id} добавлен в файл удалённых пользователей.")
         else:
@@ -186,7 +186,11 @@ def save_removed_user(user_id, user_name, user_status, removed_from_chats):
 
 
 
+<<<<<<< Updated upstream
 
+=======
+# Функция для удаления пользователя из user_ids.json и добавления в users_ids_rm.json
+>>>>>>> Stashed changes
 async def kick_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Загружаем конфигурацию и получаем список администраторов
     config = load_config()
@@ -239,6 +243,7 @@ async def kick_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 chat_username = chat_title.username
 
                 # Проверка на наличие username
+<<<<<<< Updated upstream
                 chat_url = f"https://t.me/{chat_username}" if chat_username else f"ID чата: {chat_id}"
 
                 # Добавляем чат в список удалённых
@@ -249,11 +254,31 @@ async def kick_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     'chat_type': chat_type,
                     'chat_description': chat_description
                 })
+=======
+                if chat_username:
+                    chat_url = f"https://t.me/{chat_username}"
+                else:
+                    chat_url = f"ID чата: {chat_id}"  # Просто выводим ID чата, если нет username
+                    message = (
+                    f"Пользователь: @{user_name} \(ID: ||\{user_id}||\)\n"
+                    f"Статус в чате: {user_status}\n"
+                    f"Дата присоединения: {user_joined}\n\n"
+                    f"Чат: [{chat_name}]({chat_url}) \(ID: ||\{chat_id}||\)\n"
+                    f"Тип чата: {chat_type}\n"
+                    f"Описание чата: {chat_description}\n\n"
+                    f"Пользователь был удален из чата"
+                )
+
+
+                # Отправляем сообщение в формате MarkdownV2
+                await update.message.reply_text(message, parse_mode='MarkdownV2')
+>>>>>>> Stashed changes
 
                 break  # Прерываем цикл повторных попыток, если операция выполнена успешно
 
             except ConnectError as e:
                 if attempt < attempts - 1:
+<<<<<<< Updated upstream
                     time.sleep(3)  # Задержка между попытками
                 else:
                     removed_from_chats.append({
@@ -271,6 +296,15 @@ async def kick_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     'chat_type': 'Неизвестно',
                     'chat_description': f"Ошибка: {e}"
                 })
+=======
+                    pass
+                else:
+                    # await update.message.reply_text(f"Не удалось удалить пользователя из чата {chat_id}: {e}")
+                    pass
+            except Exception as e:
+                pass
+                # await update.message.reply_text(f"Не удалось удалить пользователя из чата {chat_id}: {e}")
+>>>>>>> Stashed changes
 
     # Сохраняем обновлённый список пользователей
     save_user_ids(user_ids_dict)
@@ -293,7 +327,6 @@ async def kick_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Отправляем итоговое сообщение
     await update.message.reply_text(message, parse_mode='Markdown')
-
 
 
 
@@ -430,7 +463,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger(__name__)  # Исправлено
 
 
-CHAT_LOG_FILE = 'chat_messages.json'
+CHAT_LOG_FILE = './TG_bot/chat_messages.json'
 
 # Функция для сохранения сообщений в файл
 def save_chat_messages(chat_data):
@@ -651,7 +684,7 @@ def main():
 
     application.add_handler(CommandHandler("addadmin", add_admin_command))
 
-    application.add_handler(CommandHandler("removeadmin", remove_admin_command))
+    application.add_handler(CommandHandler("rmadmin", remove_admin_command))
 
     
 
@@ -690,7 +723,7 @@ CORS(app)
 
 # Функция для загрузки данных из файла
 def load_data():
-    with open(r'C:\Users\Maksim\Desktop\BugBusters_rndsoft_tgbot\TG_bot\chat_messages.json', 'r', encoding='utf-8') as f:
+    with open('./TG_bot/chat_messages.json', 'r', encoding='utf-8') as f:
         return json.load(f)
 
 

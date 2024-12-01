@@ -40,5 +40,21 @@
                 "type": "supergroup"
             }
         ]
+    },
+    "5405355475": {
+        "name": "tophlopl",
+        "status": "member",
+        "removed_from_chats": [
+            {
+                "name": "Чат2",
+                "id": "-4732771175",
+                "type": "group"
+            },
+            {
+                "name": "Чат1",
+                "id": "-4566804959",
+                "type": "group"
+            }
+        ]
     }
 }

@@ -1,0 +1,39 @@
+{
+    "7181579984": {
+        "name": "qwertywork10",
+        "status": "member",
+        "removed_from_chats": [
+            {
+                "name": "кгле6рьрьв",
+                "id": "-1002432859256",
+                "type": "supergroup"
+            },
+            {
+                "name": "ᅠ и Максим",
+                "id": "-1002372414833",
+                "type": "supergroup"
+            },
+            {
+                "name": "бамбам",
+                "id": "-1002415430874",
+                "type": "supergroup"
+            }
+        ]
+    },
+    "5405355475": {
+        "name": "tophlopl",
+        "status": "member",
+        "removed_from_chats": [
+            {
+                "name": "Чат2",
+                "id": "-4732771175",
+                "type": "group"
+            },
+            {
+                "name": "Чат1",
+                "id": "-4566804959",
+                "type": "group"
+            }
+        ]
+    }
+}
